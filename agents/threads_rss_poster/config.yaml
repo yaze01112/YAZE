@@ -1,0 +1,23 @@
+# Real configuration used by the GitHub Actions workflow. This file is
+# committed to the repo (it holds no secrets - Threads credentials come from
+# GitHub Secrets THREADS_USER_ID / THREADS_ACCESS_TOKEN instead).
+#
+# TODO: replace the placeholder feed below with the real RSS feed(s) to
+# follow, then flip dry_run to false once the Threads token is verified.
+
+feeds:
+  - name: example-feed
+    url: https://example.com/feed.xml
+
+poll_interval_seconds: 900
+max_posts_per_cycle: 3
+
+state_file: agents/threads_rss_poster/state.json
+log_file: agents/threads_rss_poster/agent.log
+
+dry_run: true
+
+post_template: |
+  {title}
+
+  {link}

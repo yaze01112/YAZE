@@ -1,0 +1,31 @@
+# Threads RSS poster agent configuration.
+# Copy this file to config.yaml and edit the feeds list below.
+# Threads credentials are NOT set here; they come from the environment
+# variables THREADS_USER_ID and THREADS_ACCESS_TOKEN so secrets never end
+# up in this file.
+
+feeds:
+  - name: example-feed
+    url: https://example.com/feed.xml
+
+# How often to poll all feeds when running continuously (main.py without --once).
+poll_interval_seconds: 900
+
+# Safety cap so one cycle can't flood Threads with an entire feed backlog.
+max_posts_per_cycle: 3
+
+# Where dedup state and the run log are written. Paths are resolved relative
+# to the current working directory the agent is run from (the repo root, if
+# following the README / GitHub Actions workflow).
+state_file: agents/threads_rss_poster/state.json
+log_file: agents/threads_rss_poster/agent.log
+
+# Start in dry-run mode until Threads API credentials are ready.
+# Set to false once THREADS_USER_ID / THREADS_ACCESS_TOKEN are set.
+dry_run: true
+
+# Post text template. Available fields: {title} {link} {summary} {source}
+post_template: |
+  {title}
+
+  {link}

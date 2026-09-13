@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+# config.yaml and state.json ARE committed on purpose: config.yaml holds no
+# secrets (feed URLs only) and state.json is how the GitHub Actions workflow
+# persists dedup state across ephemeral runs.
+agents/threads_rss_poster/agent.log
