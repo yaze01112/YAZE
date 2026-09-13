@@ -4,6 +4,8 @@ Usage:
     python autopost.py post "Hello from my script!"
     python autopost.py post "Check this out" --image-url https://example.com/pic.jpg
     python autopost.py run-queue queue.json --state posted.json
+    python autopost.py generate-post "today's dev update" --post-now
+    python autopost.py generate-batch topics.txt --queue queue.json --interval-hours 24
 """
 from __future__ import annotations
 
@@ -11,7 +13,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import threads_client as tc
@@ -107,6 +109,64 @@ def cmd_run_queue(args: argparse.Namespace) -> None:
         print("No due posts.")
 
 
+def cmd_generate(args: argparse.Namespace) -> None:
+    from content_generator import generate_post
+
+    text = generate_post(args.topic, args.style or "")
+    print(f"Generated ({len(text)} chars):\n{text}\n")
+
+    if args.post_now:
+        user_id, token = _credentials()
+        post_id = tc.post_text(user_id, token, text)
+        print(f"Published: https://www.threads.net/@me/post/{post_id}")
+    elif args.add_to_queue:
+        queue_path = Path(args.add_to_queue)
+        queue = _load_json(queue_path, [])
+        entry_id = args.id or f"gen-{int(datetime.now(timezone.utc).timestamp())}"
+        publish_at = args.publish_at or datetime.now(timezone.utc).isoformat()
+        queue.append({"id": entry_id, "text": text, "publish_at": publish_at})
+        _save_json(queue_path, queue)
+        print(f"Added to queue as '{entry_id}' (publish_at={publish_at})")
+    else:
+        print("Not published or queued (pass --post-now or --add-to-queue).")
+
+
+def cmd_generate_batch(args: argparse.Namespace) -> None:
+    """Generate one post per line in a topics file and schedule them into a queue."""
+    from content_generator import generate_post
+
+    topics = [
+        line.strip()
+        for line in Path(args.topics_file).read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+    if not topics:
+        sys.exit(f"No topics found in {args.topics_file}")
+
+    start = (
+        datetime.fromisoformat(args.start)
+        if args.start
+        else datetime.now(timezone.utc)
+    )
+    interval = timedelta(hours=args.interval_hours)
+
+    queue_path = Path(args.queue)
+    queue = _load_json(queue_path, [])
+    existing_ids = {entry["id"] for entry in queue}
+
+    for i, topic in enumerate(topics):
+        text = generate_post(topic, args.style or "")
+        publish_at = start + i * interval
+        entry_id = f"gen-{publish_at.strftime('%Y%m%dT%H%M%S')}-{i}"
+        if entry_id in existing_ids:
+            continue
+        queue.append({"id": entry_id, "text": text, "publish_at": publish_at.isoformat()})
+        print(f"[{entry_id}] {publish_at.isoformat()} <- {topic!r}\n  {text}\n")
+
+    _save_json(queue_path, queue)
+    print(f"Wrote {len(topics)} posts into {queue_path}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Post to Threads via the official Graph API")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -120,6 +180,32 @@ def main() -> None:
     p_queue.add_argument("queue", help="Path to the queue JSON file")
     p_queue.add_argument("--state", default="posted.json", help="Path to the state file tracking already-published ids")
     p_queue.set_defaults(func=cmd_run_queue)
+
+    p_gen = sub.add_parser(
+        "generate-post", help="Generate post text with Claude, then publish or queue it"
+    )
+    p_gen.add_argument("topic", help="Topic or brief for the post")
+    p_gen.add_argument("--style", help="Optional tone/style guidance")
+    p_gen.add_argument("--post-now", action="store_true", help="Publish immediately after generating")
+    p_gen.add_argument("--add-to-queue", help="Path to a queue JSON file to append the generated post to")
+    p_gen.add_argument("--publish-at", help="ISO-8601 UTC timestamp for the queued post (default: now)")
+    p_gen.add_argument("--id", help="Custom id for the queued post entry")
+    p_gen.set_defaults(func=cmd_generate)
+
+    p_batch = sub.add_parser(
+        "generate-batch",
+        help="Generate one post per topic (one per line in a file) and schedule them into a queue",
+    )
+    p_batch.add_argument("topics_file", help="Text file with one topic per line")
+    p_batch.add_argument("--queue", required=True, help="Path to the queue JSON file to append to")
+    p_batch.add_argument("--style", help="Optional tone/style guidance applied to every post")
+    p_batch.add_argument(
+        "--interval-hours", type=float, default=24.0, help="Hours between each scheduled post"
+    )
+    p_batch.add_argument(
+        "--start", help="ISO-8601 UTC timestamp for the first post (default: now)"
+    )
+    p_batch.set_defaults(func=cmd_generate_batch)
 
     args = parser.parse_args()
     args.func(args)

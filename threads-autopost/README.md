@@ -56,7 +56,38 @@ python autopost.py post "Hello from my script!"
 python autopost.py post "Look at this" --image-url https://example.com/pic.jpg
 ```
 
-## 4. Scheduled auto-posting
+## 4. AI-generated content
+
+`content_generator.py` uses Claude (via the `anthropic` SDK) to write the
+post text for you, so you only need to supply a topic. Requires
+`ANTHROPIC_API_KEY` to be set (or another credential source the SDK picks
+up automatically).
+
+Generate one post and publish it immediately:
+
+```bash
+python autopost.py generate-post "a quick tip about staying productive" --post-now
+```
+
+Generate one post and add it to the schedule instead of publishing now:
+
+```bash
+python autopost.py generate-post "today's dev update" --add-to-queue queue.json --publish-at 2026-09-15T09:00:00+00:00
+```
+
+Generate a whole batch from a list of topics (see `topics.example.txt`,
+one topic per line) and spread them evenly into the queue:
+
+```bash
+python autopost.py generate-batch topics.txt --queue queue.json --interval-hours 24
+```
+
+This writes one queued post per topic, `--interval-hours` apart starting
+now (or `--start <ISO-8601>`). Run `run-queue` (section 5) periodically to
+actually publish them as they come due — generating and queuing never
+posts by itself.
+
+## 5. Scheduled auto-posting
 
 Write posts into a queue file (see `queue.example.json`), each with a unique
 `id`, the `text`, an optional `image_url`, and `publish_at` (ISO-8601, UTC).
