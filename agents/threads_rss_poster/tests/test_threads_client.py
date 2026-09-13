@@ -30,9 +30,9 @@ class ThreadsClientTest(unittest.TestCase):
 
         create_call, publish_call = mock_post.call_args_list
         self.assertIn("/123/threads", create_call.args[0])
-        self.assertEqual(create_call.kwargs["data"]["text"], "hello world")
+        self.assertEqual(create_call.kwargs["params"]["text"], "hello world")
         self.assertIn("/123/threads_publish", publish_call.args[0])
-        self.assertEqual(publish_call.kwargs["data"]["creation_id"], "creation-1")
+        self.assertEqual(publish_call.kwargs["params"]["creation_id"], "creation-1")
 
     @patch("agents.threads_rss_poster.threads_client.requests.post")
     def test_publish_text_truncates_to_max_length(self, mock_post):
@@ -45,7 +45,7 @@ class ThreadsClientTest(unittest.TestCase):
         self.client.publish_text(long_text)
 
         create_call = mock_post.call_args_list[0]
-        self.assertEqual(len(create_call.kwargs["data"]["text"]), 500)
+        self.assertEqual(len(create_call.kwargs["params"]["text"]), 500)
 
     @patch("agents.threads_rss_poster.threads_client.requests.post")
     def test_create_container_error_raises(self, mock_post):
