@@ -25,6 +25,17 @@ class AgentConfig:
     threads_access_token: str | None = None
 
 
+def _clean_env(name: str) -> str | None:
+    """Read an env var and strip stray whitespace/newlines a copy-paste into
+    GitHub Secrets can easily introduce - a trailing newline would otherwise
+    silently corrupt every URL built from it."""
+    value = os.environ.get(name)
+    if value is None:
+        return None
+    value = value.strip()
+    return value or None
+
+
 def load_config(path: str) -> AgentConfig:
     """Load agent configuration from a YAML file.
 
@@ -48,6 +59,6 @@ def load_config(path: str) -> AgentConfig:
         log_file=raw.get("log_file", "agent.log"),
         post_template=raw.get("post_template", "{title}\n\n{link}"),
         dry_run=bool(raw.get("dry_run", True)),
-        threads_user_id=os.environ.get("THREADS_USER_ID"),
-        threads_access_token=os.environ.get("THREADS_ACCESS_TOKEN"),
+        threads_user_id=_clean_env("THREADS_USER_ID"),
+        threads_access_token=_clean_env("THREADS_ACCESS_TOKEN"),
     )
