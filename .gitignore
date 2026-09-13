@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+agents/threads_rss_poster/config.yaml
+agents/threads_rss_poster/state.json
+agents/threads_rss_poster/agent.log
