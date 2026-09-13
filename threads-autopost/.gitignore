@@ -1,0 +1,4 @@
+.env
+queue.json
+posted.json
+__pycache__/
