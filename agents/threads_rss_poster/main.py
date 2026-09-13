@@ -11,10 +11,15 @@ from .threads_client import ThreadsClient
 
 
 def _setup_logging(log_file: str) -> None:
+    # Console handler makes runs visible in the GitHub Actions log without
+    # needing to open the (gitignored, ephemeral-per-run) log file.
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-        handlers=[logging.FileHandler(log_file, encoding="utf-8")],
+        handlers=[
+            logging.FileHandler(log_file, encoding="utf-8"),
+            logging.StreamHandler(),
+        ],
     )
 
 

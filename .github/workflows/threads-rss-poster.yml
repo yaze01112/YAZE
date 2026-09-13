@@ -1,0 +1,48 @@
+name: Threads RSS Poster
+
+on:
+  schedule:
+    # Every hour, at minute 0. Adjust to taste - GitHub enforces a 5 minute
+    # minimum interval. Scheduled triggers only fire on the default branch.
+    - cron: "0 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: threads-rss-poster
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r agents/threads_rss_poster/requirements.txt
+
+      - name: Run poster agent
+        env:
+          THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+        run: >
+          python -m agents.threads_rss_poster.main
+          --config agents/threads_rss_poster/config.yaml --once
+
+      - name: Persist posting state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add agents/threads_rss_poster/state.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(threads-poster): update posted-entries state"
+            git push
+          fi
