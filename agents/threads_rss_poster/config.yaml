@@ -2,12 +2,11 @@
 # committed to the repo (it holds no secrets - Threads credentials come from
 # GitHub Secrets THREADS_USER_ID / THREADS_ACCESS_TOKEN instead).
 #
-# TODO: replace the placeholder feed below with the real RSS feed(s) to
-# follow, then flip dry_run to false once the Threads token is verified.
+# TODO: flip dry_run to false once the Threads token is verified working.
 
 feeds:
-  - name: example-feed
-    url: https://example.com/feed.xml
+  - name: cnyes-headline
+    url: https://news.cnyes.com/rss/cat/headline
 
 poll_interval_seconds: 900
 max_posts_per_cycle: 3
