@@ -5,8 +5,9 @@
 # TODO: flip dry_run to false once the Threads token is verified working.
 
 feeds:
-  - name: cnyes-headline
-    url: https://news.cnyes.com/rss/cat/headline
+  - name: google-news-investing
+    # q=投資 (percent-encoded so the URL stays plain ASCII for the HTTP client)
+    url: https://news.google.com/rss/search?q=%E6%8A%95%E8%B3%87&hl=zh-TW&gl=TW&ceid=TW:zh-Hant
 
 poll_interval_seconds: 900
 max_posts_per_cycle: 3
