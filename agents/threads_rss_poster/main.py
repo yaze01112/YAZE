@@ -39,6 +39,14 @@ def build_agent(config_path: str, dry_run_override: bool | None = None) -> Poste
             )
             config.dry_run = True
         else:
+            # Log lengths only (never the values) so a stray copy-paste
+            # whitespace/newline character shows up as an unexpected length
+            # without leaking the secrets themselves into CI logs.
+            logging.getLogger("threads_rss_poster").info(
+                "Using THREADS_USER_ID (len=%d) and THREADS_ACCESS_TOKEN (len=%d)",
+                len(config.threads_user_id),
+                len(config.threads_access_token),
+            )
             threads_client = ThreadsClient(config.threads_user_id, config.threads_access_token)
 
     return PosterAgent(config, state, threads_client)
