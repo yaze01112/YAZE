@@ -15,7 +15,7 @@ max_posts_per_cycle: 3
 state_file: agents/threads_rss_poster/state.json
 log_file: agents/threads_rss_poster/agent.log
 
-dry_run: true
+dry_run: false
 
 post_template: |
   {title}
