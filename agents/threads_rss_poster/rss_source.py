@@ -5,6 +5,16 @@ from dataclasses import dataclass
 
 import feedparser
 
+# Some sites block feedparser's default user agent (it identifies itself as
+# a bot) and serve an HTML error/challenge page instead of the feed, which
+# then fails to parse as XML. Requesting like an ordinary browser avoids that.
+_REQUEST_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+    ),
+}
+
 
 @dataclass
 class FeedEntry:
@@ -27,7 +37,7 @@ def _entry_id(entry) -> str:
 
 
 def fetch_entries(feed_name: str, feed_url: str) -> list[FeedEntry]:
-    parsed = feedparser.parse(feed_url)
+    parsed = feedparser.parse(feed_url, request_headers=_REQUEST_HEADERS)
     if parsed.bozo and not parsed.entries:
         raise ValueError(f"Failed to parse feed {feed_name} ({feed_url}): {parsed.bozo_exception}")
 
