@@ -25,9 +25,11 @@ class ThreadsClient:
         return self._publish_container(creation_id)
 
     def _create_container(self, text: str) -> str:
+        # Meta's documented examples pass these as query-string params, not a
+        # POST body, and the API is inconsistent about accepting the latter.
         response = requests.post(
             f"{THREADS_API_BASE}/{self._user_id}/threads",
-            data={
+            params={
                 "media_type": "TEXT",
                 "text": text,
                 "access_token": self._access_token,
@@ -43,7 +45,7 @@ class ThreadsClient:
     def _publish_container(self, creation_id: str) -> str:
         response = requests.post(
             f"{THREADS_API_BASE}/{self._user_id}/threads_publish",
-            data={
+            params={
                 "creation_id": creation_id,
                 "access_token": self._access_token,
             },
